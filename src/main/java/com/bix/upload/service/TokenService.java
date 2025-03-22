@@ -1,4 +1,4 @@
-package com.bix.upload.config;
+package com.bix.upload.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;

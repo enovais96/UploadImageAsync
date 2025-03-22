@@ -28,21 +28,30 @@ public class User implements UserDetails {
     private Long id;
     private String login;
     private String password;
+    private String email;
     private UserRole role;
     
-    public User(String login, String password, UserRole role){
+    public User(String login, String password, UserRole role, String email){
         this.login = login;
         this.password = password;
         this.role = role;
+        this.email = email;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if(this.role == UserRole.ADMIN) return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"));
-        else return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+         return List.of(new SimpleGrantedAuthority(this.role.getRole()));
     }
+    
+    public Long getId() {
+		return id;
+	}
 
-    @Override
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	@Override
     public String getUsername() {
         return login;
     }
@@ -52,7 +61,11 @@ public class User implements UserDetails {
     	return password;
     }
 
-    @Override
+	public String getEmail() {
+		return email;
+	}
+
+	@Override
     public boolean isAccountNonExpired() {
         return true;
     }

@@ -1,11 +1,12 @@
 package com.bix.upload.controller;
 
-import com.bix.upload.config.TokenService;
 import com.bix.upload.dto.AuthenticationDTO;
 import com.bix.upload.dto.LoginResponseDTO;
 import com.bix.upload.dto.RegisterDTO;
 import com.bix.upload.model.User;
-import com.bix.upload.repository.UserRepository;
+import com.bix.upload.service.EmailService;
+import com.bix.upload.service.TokenService;
+import com.bix.upload.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -24,13 +25,14 @@ public class AuthenticationController {
     private AuthenticationManager authenticationManager;
     
     @Autowired
-    private UserRepository repository;
+    private UserService service;
     
     @Autowired
-    private TokenService tokenService;
+    private TokenService tokenService;   
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid AuthenticationDTO data){
+    	
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
@@ -41,12 +43,14 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterDTO data){
-        if(this.repository.findByLogin(data.login()) != null) return ResponseEntity.badRequest().build();
+        if(this.service.findByLogin(data.login()) != null) {
+        	return ResponseEntity.badRequest().build();
+        }
 
         String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
-        User newUser = new User(data.login(), encryptedPassword, data.role());
+        User newUser = new User(data.login(), encryptedPassword, data.role(), data.email());
 
-        this.repository.save(newUser);
+        this.service.saveUser(newUser);
 
         return ResponseEntity.ok().build();
     }

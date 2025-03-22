@@ -2,8 +2,8 @@ package com.bix.upload.constant;
 
 public enum UserRole {
 	
-    ADMIN("admin"),
-    USER("user");
+    PREMIUM("premium"),
+    FREE("free");
 
     private String role;
 

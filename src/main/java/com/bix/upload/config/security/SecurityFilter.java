@@ -11,8 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.bix.upload.config.TokenService;
 import com.bix.upload.repository.UserRepository;
+import com.bix.upload.service.TokenService;
 
 import java.io.IOException;
 
