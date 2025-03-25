@@ -4,12 +4,14 @@ Using Java, Spring Boot, Kafka and MySQL, I created this project to perform an i
 # Programs Needed to Use This Project
 	- Docker
 	- Docker compose
+ 	- Java 21
     Note: All the tests are maded using Ubuntu 22.04.1
 
 # How to Install and Run
-  	1 - In the terminal, navigate to the main folder and run 'docker-compose build'.
-  	2 - In the same folder, run 'docker-compose up -d'.
-  	3 - Execute the command 'docker ps' to verify that you see 4 containers running, as shown below:
+	1 - In your preferred IDE, run Maven clean, Maven update, and Maven install in this order.
+  	2 - In the terminal, navigate to the main folder and run 'docker-compose build'.
+  	3 - In the same folder, run 'docker-compose up -d'.
+  	4 - Execute the command 'docker ps' to verify that you see 4 containers running, as shown below:
 ![image](https://github.com/user-attachments/assets/93fe9423-dba4-42ef-b92a-9173d1594c87)
 
 # How to test
