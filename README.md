@@ -1,5 +1,5 @@
 # Project: Upload Image Async with Java
-Using Java, Spring Boot, and MySQL, I created this project to perform an image upload with the possibility of reducing the size between 1 and 100 and changing the color to grey.
+Using Java, Spring Boot, Kafka and MySQL, I created this project to perform an image upload with the possibility of reducing the size between 1% and 100% and changing the color to grey.
 
 # Programs Needed to Use This Project
 	- Docker
@@ -14,3 +14,7 @@ Using Java, Spring Boot, and MySQL, I created this project to perform an image u
 
 # How to test
 You can use the Swagger collection after you bring the project up by accessing the URL: http://localhost:8080/swagger-ui/index.html
+
+# How to Copy the Images
+	1 - To copy the image you uploaded, use the command: docker cp upload-image-async-service:/tmp/images/IMAGE_NAME_RETURNED_IN_THE_RESPONSE DESTINATION_FOLDER
+	1 - To copy the processed image using Kafka, use the command: docker cp upload-image-async-service:/tmp/images/processed/IMAGE_NAME_RETURNED_IN_THE_RESPONSE DESTINATION_FOLDER
