@@ -4,9 +4,12 @@ import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,14 +28,13 @@ public class ImageUploadController {
 	@Autowired
 	private ImageService service;
 	
-	@PostMapping
-	public ResponseEntity<?> uploadImage(@Parameter(description = "file")
-	@NotBlank(message = "'file' is required")
-	 @NotNull(message = "'file' is required")
-	 MultipartFile file,
-	 @NotNull(message = "'percentNewSize' is required")
-	 BigDecimal percentNewSize,
-	 boolean filterImage) {
+	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<?> uploadImage(@RequestPart(value = "file") 
+	 									 MultipartFile file,
+ 									 	 @NotNull(message = "'percentNewSize' is required")
+	 									 BigDecimal percentNewSize,
+ 									 	 boolean filterImage) {
+		
 		try {
 			UploadImageDTO uploadImageDTO = new UploadImageDTO(file, percentNewSize, filterImage);
 			Image image = this.service.saveImage(uploadImageDTO);
