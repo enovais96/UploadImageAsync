@@ -17,6 +17,7 @@ import java.util.List;
 @Table(name = "users")
 @Entity(name = "users")
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class User implements UserDetails {
@@ -29,8 +30,6 @@ public class User implements UserDetails {
     private String password;
     private String email;
     private UserRole role;
-    
-    public User() {}
     
     public User(String login, String password, UserRole role, String email){
         this.login = login;
