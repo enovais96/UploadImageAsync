@@ -4,25 +4,20 @@ import com.bix.upload.dto.AuthenticationDTO;
 import com.bix.upload.dto.LoginResponseDTO;
 import com.bix.upload.dto.RegisterDTO;
 import com.bix.upload.model.User;
-import com.bix.upload.service.EmailService;
 import com.bix.upload.service.TokenService;
 import com.bix.upload.service.UserService;
 
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("auth")
 public class AuthenticationController {
-	
-    @Autowired
-    private AuthenticationManager authenticationManager;
     
     @Autowired
     private UserService service;
@@ -31,27 +26,25 @@ public class AuthenticationController {
     private TokenService tokenService;   
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid AuthenticationDTO data){
-    	
-        var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
-        var auth = this.authenticationManager.authenticate(usernamePassword);
-
-        var token = tokenService.generateToken((User) auth.getPrincipal());
-
-        return ResponseEntity.ok(new LoginResponseDTO(token));
+    public ResponseEntity<?> login(@RequestBody @Valid AuthenticationDTO data) throws Exception{
+    	try {
+    		User user = service.findUserWithLogin(data);
+	        var token = tokenService.generateToken(user);
+	
+	        return ResponseEntity.ok(new LoginResponseDTO(token));
+    	} catch(AuthenticationException e) {
+    		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    	}
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterDTO data){
-        if(this.service.findByLogin(data.login()) != null) {
-        	return ResponseEntity.badRequest().build();
+        try {
+        	User user = this.service.createUser(data);
+
+        	return ResponseEntity.ok(user);
+        } catch (Exception e) {
+        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
-
-        String encryptedPassword = new BCryptPasswordEncoder().encode(data.password());
-        User newUser = new User(data.login(), encryptedPassword, data.role(), data.email());
-
-        this.service.saveUser(newUser);
-
-        return ResponseEntity.ok().build();
     }
 }

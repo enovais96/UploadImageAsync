@@ -10,7 +10,7 @@ public enum LimitFreeUpload {
         this.limit = limit;
     }
 
-    public Long getImageDir(){
+    public Long getlimit(){
         return limit;
     }
 }

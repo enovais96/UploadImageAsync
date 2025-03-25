@@ -4,12 +4,15 @@ import com.bix.upload.constant.ImageDir;
 import com.bix.upload.constant.LimitFreeUpload;
 import com.bix.upload.constant.TopicsKafka;
 import com.bix.upload.constant.UserRole;
+import com.bix.upload.dto.UploadImageDTO;
+import com.bix.upload.exception.ImageUploadException;
 import com.bix.upload.model.Image;
 import com.bix.upload.model.User;
 import com.bix.upload.repository.ImageRepository;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -17,12 +20,8 @@ import java.util.Date;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ImageService {
@@ -36,40 +35,51 @@ public class ImageService {
     @Autowired
     AuthorizationService authorizationService;
     
-    public Image saveImage(MultipartFile file, Double percentNewSize, boolean filterImage) throws UsernameNotFoundException {
+    public Image saveImage(UploadImageDTO uploadImageDTO) {
     	this.validateDirectory();
     	Image image = new Image();
     	User user = authorizationService.getUserLogged();
     	
+    	if(!this.validatePercentNewSize(uploadImageDTO.percentNewSize())) {		
+            throw new IllegalArgumentException("'percentNewSize' should be between 1 and 100.");
+    	}
+    	
     	if(!this.validateLimitProccesImage(user)) {
-    		return null;
+    		throw new ImageUploadException("You have used your daily upload limit of " + LimitFreeUpload.LIMIT.getlimit() + ". If you want more, sign up for the PREMIUM plan.");
     	}
     	
     	try {
 	    	
     		image.setUserId(user);
 	    	image.setDateUpload(new Date());
-	    	image.setPercentNewSize(percentNewSize);
-	    	image.setFilterImage(filterImage);
+	    	image.setPercentNewSize(uploadImageDTO.percentNewSize().doubleValue());
+	    	image.setFilterImage(uploadImageDTO.filterImage());
 	    	
 	        image = this.saveImage(image);
 	        
-	        image.setImageName(image.getId().toString() + "_" + file.getOriginalFilename());
+	        image.setImageName(image.getId().toString() + "_" + uploadImageDTO.file().getOriginalFilename());
 	        image.setDirectoryOriginalImage(ImageDir.ORIGINAL_IMAGE.getImageDir());
 	        
-	        File destinationFile = new File(ImageDir.ORIGINAL_IMAGE.getImageDir() + image.getId() + "_" + file.getOriginalFilename());
-			file.transferTo(destinationFile);
+	        File destinationFile = new File(ImageDir.ORIGINAL_IMAGE.getImageDir() + image.getId() + "_" + uploadImageDTO.file().getOriginalFilename());
+	        uploadImageDTO.file().transferTo(destinationFile);
 		
 			this.saveImage(image);
 			
-			//kafkaProducerService.sendMessage(TopicsKafka.IMAGE_UPLOAD.getTopicKafka(), image.getId().toString());
+			kafkaProducerService.sendMessage(TopicsKafka.IMAGE_UPLOAD.getTopicKafka(), image.getId().toString());
 			
-    	} catch (IllegalStateException | IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+    	} catch (IOException e) {
+			throw new ImageUploadException(e.getMessage());
 		}
         
     	return image;
+    }
+    
+    private boolean validatePercentNewSize(BigDecimal percentNewSize) {
+        if (percentNewSize.compareTo(BigDecimal.ONE) < 0 || percentNewSize.compareTo(new BigDecimal(100)) > 0) {
+            return false;
+        }
+        
+        return true;
     }
     
     public Optional<Image> findImage(Long id) {
@@ -90,7 +100,7 @@ public class ImageService {
 		
 		Long imagesUploadedToday = this.countImagesUploadedToday(user);
 		
-    	if(imagesUploadedToday.compareTo(LimitFreeUpload.LIMIT.getImageDir()) < 0) {
+    	if(imagesUploadedToday.compareTo(LimitFreeUpload.LIMIT.getlimit()) < 0) {
     		return true;
     	}
 		

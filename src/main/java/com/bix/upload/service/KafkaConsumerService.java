@@ -8,12 +8,12 @@ import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import com.bix.upload.constant.ImageDir;
+import com.bix.upload.exception.ImageUploadException;
 import com.bix.upload.model.Image;
 
 import net.coobird.thumbnailator.Thumbnails;
@@ -24,7 +24,7 @@ public class KafkaConsumerService {
 	@Autowired
 	ImageService imageService;
 	
-    //@KafkaListener(topics = "image-upload", groupId = "upload-image-group")
+    @KafkaListener(topics = "image-upload", groupId = "upload-image-group")
     public void consume(Long message) {
         if (message == null || message == 0l) {
         	return;
@@ -62,8 +62,7 @@ public class KafkaConsumerService {
 			}
 			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ImageUploadException(e.getMessage());
 		}
     }
     
@@ -78,10 +77,8 @@ public class KafkaConsumerService {
                 int rgba = originalImage.getRGB(x, y);
                 Color color = new Color(rgba, true);
                 
-                // Calcula a intensidade média de vermelho, verde e azul
                 int gray = (int) (0.2126 * color.getRed() + 0.7152 * color.getGreen() + 0.0722 * color.getBlue());
                 
-                // Define o valor de pixel na nova imagem
                 gray = (gray << 16) | (gray << 8) | gray;
                 grayscaleImage.setRGB(x, y, gray);
             }
@@ -95,11 +92,10 @@ public class KafkaConsumerService {
     	
     	try {
 			Thumbnails.of(originalImage)
-			          .scale((image.getPercentNewSize()/100))  // Mantém o tamanho original
+			          .scale((image.getPercentNewSize()/100))
 			          .toFile(processedFile);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new ImageUploadException(e.getMessage());
 		}
     	
     	return processedFile;

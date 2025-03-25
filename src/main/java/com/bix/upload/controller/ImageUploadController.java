@@ -1,17 +1,22 @@
 package com.bix.upload.controller;
 
-import java.io.File;
+import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.bix.upload.dto.UploadImageDTO;
 import com.bix.upload.model.Image;
 import com.bix.upload.service.ImageService;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/upload")
@@ -21,13 +26,21 @@ public class ImageUploadController {
 	private ImageService service;
 	
 	@PostMapping
-	public ResponseEntity<Image> uploadImage(@RequestParam("file") MultipartFile file,
-										 @RequestParam("percentNewSize") Double percentNewSize,
-										 @RequestParam("filterImage") boolean filterImage) {
+	public ResponseEntity<?> uploadImage(@Parameter(description = "file")
+	@NotBlank(message = "'file' is required")
+	 @NotNull(message = "'file' is required")
+	 MultipartFile file,
+	 @NotNull(message = "'percentNewSize' is required")
+	 BigDecimal percentNewSize,
+	 boolean filterImage) {
+		try {
+			UploadImageDTO uploadImageDTO = new UploadImageDTO(file, percentNewSize, filterImage);
+			Image image = this.service.saveImage(uploadImageDTO);
 		
-		Image image = this.service.saveImage(file, percentNewSize, filterImage);
-		
-		return ResponseEntity.ok(image);
+			return ResponseEntity.ok(image);
+		} catch (IllegalStateException e) {
+        	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
 	}
 
 }
